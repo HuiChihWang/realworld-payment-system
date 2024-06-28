@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stripe Payment</title>
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+<!--enter price amount and select currency-->
+<form id="price-form">
+    <input type="number" id="price" placeholder="Enter price amount" value="100">
+    <select id="currency">
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+        <option value="JPY">JPY</option>
+    </select>
+</form>
+<form id="payment-form">
+    <div id="card-element">
+        <!-- Stripe Card Element will be inserted here. -->
+    </div>
+    <button id="pay-button" type="submit">Pay</button>
+</form>
+
+<script>
+    const key = "[[${stripePublicKey}]]"; // Use your test public key
+    const stripe = Stripe(key, {
+        apiVersion: '2024-06-20',
+    });
+    const elements = stripe.elements();
+
+    const style = {
+        base: {
+            color: '#32325d',
+            fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+            fontSmoothing: 'antialiased',
+            fontSize: '16px',
+            '::placeholder': {
+                color: '#aab7c4'
+            }
+        },
+        invalid: {
+            color: '#fa755a',
+            iconColor: '#fa755a'
+        }
+    };
+
+    const card = elements.create('card', {style: style});
+    card.mount('#card-element');
+
+    const form = document.getElementById('payment-form');
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const res = await fetch("[[@{/api/payment/stripe}]]", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                amount: document.getElementById('price').value,
+                currency: document.getElementById('currency').value
+            }),
+        })
+
+        const { clientSecret } = await res.json()
+        const payRes = await stripe.confirmCardPayment(clientSecret, {
+            payment_method: {
+                card: card,
+            }
+        })
+
+        console.log(payRes);
+
+        if (payRes.error) {
+            return alert(payRes.error.message)
+        }
+
+        alert("Payment successful");
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres
+    container_name: realworld-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: real-world-kt
+    ports:
+      - "5431:5432"
+    networks:
+      - real-world-kt-network
+    volumes:
+      - ./storage/postgres-database:/var/lib/postgresql/data
+
+  redis:
+    image: redis
+    container_name: realworld-redis
+    ports:
+      - "6378:6379"
+    networks:
+      - real-world-kt-network
+    volumes:
+      - ./storage/redis-data:/data
+
+
+
+networks:
+  real-world-kt-network:
+    driver: bridge
